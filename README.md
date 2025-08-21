@@ -1,0 +1,2 @@
+# rdcli
+Real-Debrid CLI.
