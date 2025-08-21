@@ -3,6 +3,9 @@ description: Real-Debrid CLI.
 version: 1.0.0
 repository: https://github.com/tytydraco/rdcli
 
+executables:
+  rdcli: rdcli
+
 environment:
   sdk: ^3.8.1
 
