@@ -1,5 +1,54 @@
-import 'package:rdcli/rdcli.dart' as rdcli;
+import 'dart:io';
 
-void main(List<String> arguments) {
-  print('Hello world: ${rdcli.calculate()}!');
+import 'package:args/args.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart';
+import 'package:rdcli/MagnetDownloader.dart';
+import 'package:rdcli/rdcli.dart';
+
+Future<void> main(List<String> arguments) async {
+  final parser = ArgParser();
+  parser
+    ..addFlag(
+      'help',
+      abbr: 'h',
+      help: 'Shows program usage.',
+      callback: (value) {
+        if (value) stdout.write(parser.usage);
+      },
+    )
+    ..addOption(
+      'api-key',
+      abbr: 'k',
+      help: 'Real-Debrid API key.',
+      mandatory: true,
+    )
+    ..addOption(
+      'output-directory',
+      abbr: 'o',
+      help: 'Output directory.',
+      defaultsTo: '.',
+    );
+
+  final results = parser.parse(arguments);
+  final magnetLinks = results.rest;
+
+  // Nothing to do.
+  if (magnetLinks.isEmpty) return;
+
+  final apiKey = results['api-key'] as String;
+  final outputDirectoryStr = results['output-directory'] as String;
+
+  final rdcli = Rdcli(apiKey: apiKey);
+  for (final magnetLink in magnetLinks) {
+    final magnetDownloader = MagnetDownloader(magnet: magnetLink, rdcli: rdcli);
+    final downloadLink = await magnetDownloader.download();
+
+    final response = await http.get(Uri.parse(downloadLink));
+    final filename = basename(downloadLink);
+    final file = File(join(outputDirectoryStr, filename));
+    await file.writeAsBytes(response.bodyBytes);
+
+    stdout.writeln('Done: $filename');
+  }
 }
