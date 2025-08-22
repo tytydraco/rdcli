@@ -39,6 +39,12 @@ Future<void> main(List<String> arguments) async {
   final apiKey = results['api-key'] as String;
   final outputDirectoryStr = results['output-directory'] as String;
 
+  final outputDirectory = File(outputDirectoryStr);
+  if (!outputDirectory.existsSync()) {
+    stderr.writeln('Output directory not found.');
+    exit(1);
+  }
+
   final rdcli = Rdcli(apiKey: apiKey);
   for (final magnetLink in magnetLinks) {
     final magnetDownloader = MagnetDownloader(magnet: magnetLink, rdcli: rdcli);
