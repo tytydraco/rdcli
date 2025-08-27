@@ -14,7 +14,7 @@ Future<void> main(List<String> arguments) async {
       abbr: 'h',
       help: 'Shows program usage.',
       callback: (value) {
-        if (value) stdout.write(parser.usage);
+        if (value) stdout.writeln(parser.usage);
       },
     )
     ..addOption(
