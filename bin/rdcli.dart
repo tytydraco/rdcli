@@ -33,8 +33,13 @@ Future<void> main(List<String> arguments) async {
   final results = parser.parse(arguments);
   final magnetLinks = results.rest;
 
-  // Nothing to do.
-  if (magnetLinks.isEmpty) return;
+  if (magnetLinks.isEmpty) {
+    stderr.writeln('No magnet URLs specified.');
+    stdout
+      ..writeln()
+      ..writeln(parser.usage);
+    exit(1);
+  }
 
   final apiKey = results['api-key'] as String;
   final outputDirectoryStr = results['output-directory'] as String;
