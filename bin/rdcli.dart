@@ -44,7 +44,7 @@ Future<void> main(List<String> arguments) async {
   final apiKey = results['api-key'] as String;
   final outputDirectoryStr = results['output-directory'] as String;
 
-  final outputDirectory = File(outputDirectoryStr);
+  final outputDirectory = Directory(outputDirectoryStr);
   if (!outputDirectory.existsSync()) {
     stderr.writeln('Output directory not found.');
     exit(1);
