@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -24,13 +25,20 @@ class Rdcli {
       },
     );
 
+    if (response.statusCode != 201) {
+      stderr
+        ..writeln('Failed to add magnet:')
+        ..writeln(response.body);
+      exit(1);
+    }
+
     final j = jsonDecode(response.body) as Map<String, dynamic>;
     return j['id'] as String;
   }
 
   /// Select which torrent to download files from.
   Future<void> selectFilesToDownload(String id) async {
-    await http.post(
+    final response = await http.post(
       Uri.parse(
         'https://api.real-debrid.com/rest/1.0/torrents/selectFiles/$id',
       ),
@@ -41,6 +49,13 @@ class Rdcli {
         'files': 'all',
       },
     );
+
+    if (response.statusCode != 204) {
+      stderr
+        ..writeln('Failed to select files:')
+        ..writeln(response.body);
+      exit(1);
+    }
   }
 
   /// Find the torrent link from the torrent id.
@@ -53,6 +68,13 @@ class Rdcli {
         'Authorization': 'Bearer $apiKey',
       },
     );
+
+    if (response.statusCode != 200) {
+      stderr
+        ..writeln('Failed to get torrent info:')
+        ..writeln(response.body);
+      exit(1);
+    }
 
     final j = jsonDecode(response.body) as Map<String, dynamic>;
     final links = j['links'] as List<dynamic>;
@@ -69,6 +91,13 @@ class Rdcli {
         'Authorization': 'Bearer $apiKey',
       },
     );
+
+    if (response.statusCode != 200) {
+      stderr
+        ..writeln('Failed to check torrent download status:')
+        ..writeln(response.body);
+      exit(1);
+    }
 
     final j = jsonDecode(response.body) as Map<String, dynamic>;
     final status = j['status'] as String;
@@ -88,6 +117,13 @@ class Rdcli {
         'link': link,
       },
     );
+
+    if (response.statusCode != 200) {
+      stderr
+        ..writeln('Failed to unrestrict access link:')
+        ..writeln(response.body);
+      exit(1);
+    }
 
     final j = jsonDecode(response.body) as Map<String, dynamic>;
     return j['download'] as String;
