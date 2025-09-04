@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
-import 'package:rdcli/MagnetDownloader.dart';
 import 'package:rdcli/rdcli.dart';
 
 Future<void> main(List<String> arguments) async {
@@ -50,10 +49,10 @@ Future<void> main(List<String> arguments) async {
     exit(1);
   }
 
-  final rdcli = Rdcli(apiKey: apiKey);
   for (final magnetLink in magnetLinks) {
-    final magnetDownloader = MagnetDownloader(magnet: magnetLink, rdcli: rdcli);
-    final downloadLink = await magnetDownloader.download();
+    final rdcli = Rdcli(apiKey: apiKey, magnet: magnetLink);
+
+    final downloadLink = await rdcli.download();
 
     final response = await http.get(Uri.parse(downloadLink));
     final filename = basename(downloadLink);

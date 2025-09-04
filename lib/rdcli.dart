@@ -1,119 +1,43 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:http/http.dart' as http;
 import 'package:rdcli/src/api.dart';
 
-/// The API client.
+/// Downloads a magnet using Real Debrid.
 class Rdcli {
-  /// Creates a new [Rdcli].
+  /// Creates a new [Rdcli] given a [magnet] link and [apiKey].
   Rdcli({
+    required this.magnet,
     required this.apiKey,
   });
+
+  /// The magnet link.
+  final String magnet;
 
   /// The API key.
   final String apiKey;
 
-  /// HTTP headers with RealDebrid authentication.
-  late final authHeaders = {'Authorization': 'Bearer $apiKey'};
+  /// The [Api] instance.
+  late final api = Api(apiKey: apiKey);
 
-  /// Add the magnet to the download queue.
-  Future<String> addMagnet(String link) async {
-    final response = await http.post(
-      Uri.parse(apiEndpointAddMagnet),
-      headers: authHeaders,
-      body: {
-        'magnet': link,
-      },
-    );
+  /// Download the magnet.
+  Future<String> download() async {
+    // 1. Add magnet
+    final id = await api.addMagnet(magnet);
 
-    if (response.statusCode != 201) {
-      stderr
-        ..writeln('Failed to add magnet:')
-        ..writeln(response.body);
-      exit(1);
+    // 2. Select files
+    await api.selectFilesToDownload(id);
+
+    // 2.5. Wait for download to finish
+    while (!(await api.getIsDownloadedFromId(id))) {
+      sleep(const Duration(seconds: 1));
     }
 
-    final j = jsonDecode(response.body) as Map<String, dynamic>;
-    return j['id'] as String;
-  }
+    // 3. Get info
+    final link = await api.getTorrentLinkFromId(id);
 
-  /// Select which torrent to download files from.
-  Future<void> selectFilesToDownload(String id) async {
-    final response = await http.post(
-      Uri.parse(
-        '$apiEndpointSelectFiles/$id',
-      ),
-      headers: authHeaders,
-      body: {
-        'files': 'all',
-      },
-    );
+    // 4. Unrestrict link
+    final downloadLink = await api.unrestrictLink(link);
 
-    if (response.statusCode != 204) {
-      stderr
-        ..writeln('Failed to select files:')
-        ..writeln(response.body);
-      exit(1);
-    }
-  }
-
-  /// Find the torrent link from the torrent id.
-  Future<String> getTorrentLinkFromId(String id) async {
-    final response = await http.get(
-      Uri.parse('$apiEndpointTorrentInfo/$id'),
-      headers: authHeaders,
-    );
-
-    if (response.statusCode != 200) {
-      stderr
-        ..writeln('Failed to get torrent info:')
-        ..writeln(response.body);
-      exit(1);
-    }
-
-    final j = jsonDecode(response.body) as Map<String, dynamic>;
-    final links = j['links'] as List<dynamic>;
-    return links.first as String;
-  }
-
-  /// Find the torrent link from the torrent id.
-  Future<bool> getIsDownloadedFromId(String id) async {
-    final response = await http.get(
-      Uri.parse('$apiEndpointTorrentInfo/$id'),
-      headers: authHeaders,
-    );
-
-    if (response.statusCode != 200) {
-      stderr
-        ..writeln('Failed to check torrent download status:')
-        ..writeln(response.body);
-      exit(1);
-    }
-
-    final j = jsonDecode(response.body) as Map<String, dynamic>;
-    final status = j['status'] as String;
-    return status == 'downloaded';
-  }
-
-  /// Unrestricts a link to a torrent.
-  Future<String> unrestrictLink(String link) async {
-    final response = await http.post(
-      Uri.parse(apiEndpointUnrestrictLink),
-      headers: authHeaders,
-      body: {
-        'link': link,
-      },
-    );
-
-    if (response.statusCode != 200) {
-      stderr
-        ..writeln('Failed to unrestrict access link:')
-        ..writeln(response.body);
-      exit(1);
-    }
-
-    final j = jsonDecode(response.body) as Map<String, dynamic>;
-    return j['download'] as String;
+    return downloadLink;
   }
 }

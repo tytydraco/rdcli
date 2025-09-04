@@ -1,120 +1,119 @@
-/// RealDebrid API endpoint for adding a magnet.
-///
-/// POST /torrents/addMagnet
-/// Add a magnet link to download, return a 201 HTTP code.
-/// Parameters:
-///   - magnet        string  Magnet link.
-///   - host          string  Hoster domain (retrieved from
-///                           /torrents/availableHosts).
-///
-/// Return:
-/// {
-///   "id": "string",
-///   "uri": "string" // URL of the created resource
-/// }
-///
-/// Error codes:
-///   - 400   Bad request (see error message).
-///   - 401   Bad token (expired, invalid).
-///   - 403   Permission denied (account locked, not premium).
-///   - 503   Service unavailable (see error message).
-const apiEndpointAddMagnet =
-    'https://api.real-debrid.com/rest/1.0/torrents/addMagnet';
+import 'dart:convert';
+import 'dart:io';
 
-/// RealDebrid API endpoint for selecting files. Specify an ID.
-///
-/// POST /torrents/selectFiles/{id}
-/// Select files of a torrent to start it, returns 204 HTTP code.
-/// Parameters:
-///   - files         string  Selected files IDs (comma separated) or "all".
-///
-/// Return:
-/// None
-///
-/// Error codes:
-///   - 202   Action already done.
-///   - 400   Bad request (see error message).
-///   - 401   Bad token (expired, invalid).
-///   - 403   Permission denied (account locked, not premium).
-///   - 404   Wrong parameter (invalid file id(s)) / Unknown resource (invalid
-///           id).
-const apiEndpointSelectFiles =
-    'https://api.real-debrid.com/rest/1.0/torrents/selectFiles';
+import 'package:http/http.dart' as http;
+import 'package:rdcli/src/endpoints.dart';
 
-/// RealDebrid API endpoint for getting torrent info. Specify an ID.
-///
-/// GET /torrents/info/{id}
-/// Get all information on the asked torrent.
-///
-/// Return:
-/// [
-///   {
-///     "id": "string",
-///     "filename": "string",
-///     "original_filename": "string", // Original name of the torrent
-///     "hash": "string", // SHA1 Hash of the torrent
-///     "bytes": int, // Size of selected files only
-///     "original_bytes": int, // Total size of the torrent
-///     "host": "string", // Host main domain
-///     "split": int, // Split size of links
-///     "progress": int, // Possible values: 0 to 100
-///     "status": "downloaded", // Current status of the torrent: magnet_error, magnet_conversion, waiting_files_selection, queued, downloading, downloaded, error, virus, compressing, uploading, dead
-///     "added": "string", // jsonDate
-///     "files": [
-///       {
-///         "id": int,
-///         "path": "string", // Path to the file inside the torrent, starting with "/"
-///         "bytes": int,
-///         "selected": int // 0 or 1
-///       },
-///       {
-///         "id": int,
-///         "path": "string", // Path to the file inside the torrent, starting with "/"
-///         "bytes": int,
-///         "selected": int // 0 or 1
-///       }
-///     ],
-///     "links": [
-///       "string" // Host URL
-///     ],
-///     "ended": "string", // !! Only present when finished, jsonDate
-///     "speed": int, // !! Only present in "downloading", "compressing", "uploading" status
-///     "seeders": int // !! Only present in "downloading", "magnet_conversion" status
-///   }
-/// ]
-///
-/// Error codes:
-///   - 401   Bad token (expired, invalid).
-///   - 403   Permission denied (account locked).
-const apiEndpointTorrentInfo =
-    'https://api.real-debrid.com/rest/1.0/torrents/info';
+/// The API client.
+class Api {
+  /// Creates a new [Api].
+  Api({
+    required this.apiKey,
+  });
 
-/// RealDebrid API endpoint to unrestrict a link. Specify a link.
-///
-/// POST /unrestrict/link
-/// Unrestrict a hoster link and get a new unrestricted link.
-/// Parameters:
-///   - link          string  The original hoster link.
-///   - password      string  Password to unlock the file access hoster side.
-///   - remote        string  0 or 1, use Remote traffic, dedicated servers and
-///                           account sharing protections lifted.
-///
-/// Return:
-/// {
-///   "id": "string",
-///   "filename": "string",
-///   "mimeType": "string", // Mime Type of the file, guessed by the file extension
-///   "filesize": int, // Filesize in bytes, 0 if unknown
-///   "link": "string", // Original link
-///   "host": "string", // Host main domain
-///   "chunks": int, // Max Chunks allowed
-///   "crc": int, // Disable / enable CRC check
-///   "download": "string", // Generated link
-///   "streamable": int // Is the file streamable on website
-/// }
-///
-/// Error codes:
-///   - 401   Bad token (expired, invalid).
-///   - 403   Permission denied (account locked).
-const apiEndpointUnrestrictLink =
-    'https://api.real-debrid.com/rest/1.0/unrestrict/link';
+  /// The API key.
+  final String apiKey;
+
+  /// HTTP headers with RealDebrid authentication.
+  late final _authHeaders = {'Authorization': 'Bearer $apiKey'};
+
+  /// Add the magnet to the download queue.
+  Future<String> addMagnet(String link) async {
+    final response = await http.post(
+      Uri.parse(apiEndpointAddMagnet),
+      headers: _authHeaders,
+      body: {
+        'magnet': link,
+      },
+    );
+
+    if (response.statusCode != 201) {
+      stderr
+        ..writeln('Failed to add magnet:')
+        ..writeln(response.body);
+      exit(1);
+    }
+
+    final j = jsonDecode(response.body) as Map<String, dynamic>;
+    return j['id'] as String;
+  }
+
+  /// Select which torrent to download files from.
+  Future<void> selectFilesToDownload(String id) async {
+    final response = await http.post(
+      Uri.parse(
+        '$apiEndpointSelectFiles/$id',
+      ),
+      headers: _authHeaders,
+      body: {
+        'files': 'all',
+      },
+    );
+
+    if (response.statusCode != 204) {
+      stderr
+        ..writeln('Failed to select files:')
+        ..writeln(response.body);
+      exit(1);
+    }
+  }
+
+  /// Find the torrent link from the torrent id.
+  Future<String> getTorrentLinkFromId(String id) async {
+    final response = await http.get(
+      Uri.parse('$apiEndpointTorrentInfo/$id'),
+      headers: _authHeaders,
+    );
+
+    if (response.statusCode != 200) {
+      stderr
+        ..writeln('Failed to get torrent info:')
+        ..writeln(response.body);
+      exit(1);
+    }
+
+    final j = jsonDecode(response.body) as Map<String, dynamic>;
+    final links = j['links'] as List<dynamic>;
+    return links.first as String;
+  }
+
+  /// Find the torrent link from the torrent id.
+  Future<bool> getIsDownloadedFromId(String id) async {
+    final response = await http.get(
+      Uri.parse('$apiEndpointTorrentInfo/$id'),
+      headers: _authHeaders,
+    );
+
+    if (response.statusCode != 200) {
+      stderr
+        ..writeln('Failed to check torrent download status:')
+        ..writeln(response.body);
+      exit(1);
+    }
+
+    final j = jsonDecode(response.body) as Map<String, dynamic>;
+    final status = j['status'] as String;
+    return status == 'downloaded';
+  }
+
+  /// Unrestricts a link to a torrent.
+  Future<String> unrestrictLink(String link) async {
+    final response = await http.post(
+      Uri.parse(apiEndpointUnrestrictLink),
+      headers: _authHeaders,
+      body: {
+        'link': link,
+      },
+    );
+
+    if (response.statusCode != 200) {
+      stderr
+        ..writeln('Failed to unrestrict access link:')
+        ..writeln(response.body);
+      exit(1);
+    }
+
+    final j = jsonDecode(response.body) as Map<String, dynamic>;
+    return j['download'] as String;
+  }
+}
