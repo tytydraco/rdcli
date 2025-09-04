@@ -6,15 +6,15 @@ import 'package:rdcli/src/api.dart';
 class Rdcli {
   /// Creates a new [Rdcli] given a [magnet] link and [apiKey].
   Rdcli({
-    required this.magnet,
     required this.apiKey,
+    required this.magnet,
   });
-
-  /// The magnet link.
-  final String magnet;
 
   /// The API key.
   final String apiKey;
+
+  /// The magnet link.
+  final String magnet;
 
   /// The [Api] instance.
   late final api = Api(apiKey: apiKey);
