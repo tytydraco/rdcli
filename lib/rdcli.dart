@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:rdcli/src/api.dart';
 
 /// The API client.
 class Rdcli {
@@ -13,13 +14,14 @@ class Rdcli {
   /// The API key.
   final String apiKey;
 
+  /// HTTP headers with RealDebrid authentication.
+  late final authHeaders = {'Authorization': 'Bearer $apiKey'};
+
   /// Add the magnet to the download queue.
   Future<String> addMagnet(String link) async {
     final response = await http.post(
-      Uri.parse('https://api.real-debrid.com/rest/1.0/torrents/addMagnet'),
-      headers: {
-        'Authorization': 'Bearer $apiKey',
-      },
+      Uri.parse(apiEndpointAddMagnet),
+      headers: authHeaders,
       body: {
         'magnet': link,
       },
@@ -40,11 +42,9 @@ class Rdcli {
   Future<void> selectFilesToDownload(String id) async {
     final response = await http.post(
       Uri.parse(
-        'https://api.real-debrid.com/rest/1.0/torrents/selectFiles/$id',
+        '$apiEndpointSelectFiles/$id',
       ),
-      headers: {
-        'Authorization': 'Bearer $apiKey',
-      },
+      headers: authHeaders,
       body: {
         'files': 'all',
       },
@@ -61,12 +61,8 @@ class Rdcli {
   /// Find the torrent link from the torrent id.
   Future<String> getTorrentLinkFromId(String id) async {
     final response = await http.get(
-      Uri.parse(
-        'https://api.real-debrid.com/rest/1.0/torrents/info/$id',
-      ),
-      headers: {
-        'Authorization': 'Bearer $apiKey',
-      },
+      Uri.parse('$apiEndpointTorrentInfo/$id'),
+      headers: authHeaders,
     );
 
     if (response.statusCode != 200) {
@@ -84,12 +80,8 @@ class Rdcli {
   /// Find the torrent link from the torrent id.
   Future<bool> getIsDownloadedFromId(String id) async {
     final response = await http.get(
-      Uri.parse(
-        'https://api.real-debrid.com/rest/1.0/torrents/info/$id',
-      ),
-      headers: {
-        'Authorization': 'Bearer $apiKey',
-      },
+      Uri.parse('$apiEndpointTorrentInfo/$id'),
+      headers: authHeaders,
     );
 
     if (response.statusCode != 200) {
@@ -107,12 +99,8 @@ class Rdcli {
   /// Unrestricts a link to a torrent.
   Future<String> unrestrictLink(String link) async {
     final response = await http.post(
-      Uri.parse(
-        'https://api.real-debrid.com/rest/1.0/unrestrict/link',
-      ),
-      headers: {
-        'Authorization': 'Bearer $apiKey',
-      },
+      Uri.parse(apiEndpointUnrestrictLink),
+      headers: authHeaders,
       body: {
         'link': link,
       },
