@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:rdcli/rdcli.dart';
 
@@ -51,14 +50,8 @@ Future<void> main(List<String> arguments) async {
 
   for (final magnetLink in magnetLinks) {
     final rdcli = Rdcli(apiKey: apiKey, magnet: magnetLink);
+    final file = await rdcli.download(outputDirectory);
 
-    final downloadLink = await rdcli.download();
-
-    final response = await http.get(Uri.parse(downloadLink));
-    final filename = basename(downloadLink);
-    final file = File(join(outputDirectoryStr, filename));
-    await file.writeAsBytes(response.bodyBytes);
-
-    stdout.writeln('Done: $filename');
+    stdout.writeln('Done: ${basename(file.path)}');
   }
 }
