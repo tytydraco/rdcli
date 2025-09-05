@@ -1,8 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:rdcli/src/endpoints.dart';
+import 'package:rdcli/src/exceptions/add_magnet_exception.dart';
+import 'package:rdcli/src/exceptions/select_files_exception.dart';
+import 'package:rdcli/src/exceptions/torrent_info_exception.dart';
+import 'package:rdcli/src/exceptions/unrestrict_link_exception.dart';
 
 /// The API client.
 class Api {
@@ -28,10 +31,9 @@ class Api {
     );
 
     if (response.statusCode != 201) {
-      stderr
-        ..writeln('Failed to add magnet:')
-        ..writeln(response.body);
-      exit(1);
+      throw AddMagnetException(
+        'Status code: ${response.statusCode}\n${response.body}',
+      );
     }
 
     final j = jsonDecode(response.body) as Map<String, dynamic>;
@@ -51,10 +53,9 @@ class Api {
     );
 
     if (response.statusCode != 204) {
-      stderr
-        ..writeln('Failed to select files:')
-        ..writeln(response.body);
-      exit(1);
+      throw SelectFilesException(
+        'Status code: ${response.statusCode}\n${response.body}',
+      );
     }
   }
 
@@ -66,10 +67,9 @@ class Api {
     );
 
     if (response.statusCode != 200) {
-      stderr
-        ..writeln('Failed to get torrent info:')
-        ..writeln(response.body);
-      exit(1);
+      throw TorrentInfoException(
+        'Status code: ${response.statusCode}\n${response.body}',
+      );
     }
 
     final j = jsonDecode(response.body) as Map<String, dynamic>;
@@ -85,10 +85,9 @@ class Api {
     );
 
     if (response.statusCode != 200) {
-      stderr
-        ..writeln('Failed to check torrent download status:')
-        ..writeln(response.body);
-      exit(1);
+      throw TorrentInfoException(
+        'Status code: ${response.statusCode}\n${response.body}',
+      );
     }
 
     final j = jsonDecode(response.body) as Map<String, dynamic>;
@@ -107,10 +106,9 @@ class Api {
     );
 
     if (response.statusCode != 200) {
-      stderr
-        ..writeln('Failed to unrestrict access link:')
-        ..writeln(response.body);
-      exit(1);
+      throw UnrestrictLinkException(
+        'Status code: ${response.statusCode}\n${response.body}',
+      );
     }
 
     final j = jsonDecode(response.body) as Map<String, dynamic>;
