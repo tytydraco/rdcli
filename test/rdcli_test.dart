@@ -37,7 +37,7 @@ void main() {
   });
 
   group(
-    'Rdcli',
+    'Rdcli intended behavior',
     () {
       final rdcli = Rdcli(magnet: _testMagnet, apiKey: _apiKey);
       File? file;

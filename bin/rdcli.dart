@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:path/path.dart';
 import 'package:rdcli/rdcli.dart';
+import 'package:rdcli/src/exceptions/rdcli_exception.dart';
 
 Future<void> main(List<String> arguments) async {
   final parser = ArgParser();
@@ -50,8 +51,14 @@ Future<void> main(List<String> arguments) async {
 
   for (final magnetLink in magnetLinks) {
     final rdcli = Rdcli(apiKey: apiKey, magnet: magnetLink);
-    final file = await rdcli.download(outputDirectory);
 
-    stdout.writeln('Done: ${basename(file.path)}');
+    try {
+      final file = await rdcli.download(outputDirectory);
+
+      stdout.writeln('Done: ${basename(file.path)}');
+    } on RdcliException catch (e) {
+      stderr.writeln(e.toString());
+      exit(1);
+    }
   }
 }
