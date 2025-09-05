@@ -23,6 +23,13 @@ Future<void> main(List<String> arguments) async {
       mandatory: true,
     )
     ..addOption(
+      'mode',
+      abbr: 'm',
+      help: 'Output mode.',
+      allowed: ['file', 'link'],
+      defaultsTo: 'file',
+    )
+    ..addOption(
       'output-directory',
       abbr: 'o',
       help: 'Output directory.',
@@ -42,6 +49,7 @@ Future<void> main(List<String> arguments) async {
 
   final apiKey = results['api-key'] as String;
   final outputDirectoryStr = results['output-directory'] as String;
+  final mode = results['mode'] as String;
 
   final outputDirectory = Directory(outputDirectoryStr);
   if (!outputDirectory.existsSync()) {
@@ -53,9 +61,15 @@ Future<void> main(List<String> arguments) async {
     final rdcli = Rdcli(apiKey: apiKey, magnet: magnetLink);
 
     try {
-      final file = await rdcli.download(outputDirectory);
+      if (mode == 'file') {
+        final file = await rdcli.download(outputDirectory);
 
-      stdout.writeln('Done: ${basename(file.path)}');
+        stdout.writeln(basename(file.path));
+      } else {
+        final link = await rdcli.downloadLink();
+
+        stdout.writeln(link);
+      }
     } on RdcliException catch (e) {
       stderr.writeln(e.toString());
       exit(1);

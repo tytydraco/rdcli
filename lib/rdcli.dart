@@ -30,8 +30,8 @@ class Rdcli {
     return file;
   }
 
-  /// Download the magnet.
-  Future<File> download(Directory out) async {
+  /// Download the magnet and return the public link.
+  Future<String> downloadLink() async {
     // 1. Add magnet.
     final id = await api.addMagnet(magnet);
 
@@ -47,10 +47,13 @@ class Rdcli {
     final link = await api.getPrivateLink(id);
 
     // 4. Unrestrict link.
-    final downloadLink = await api.getPublicLink(link);
+    return api.getPublicLink(link);
+  }
 
-    // 5. Save tp disk.
-    final file = await _saveToDisk(downloadLink, out);
+  /// Download the magnet.
+  Future<File> download(Directory out) async {
+    final link = await downloadLink();
+    final file = await _saveToDisk(link, out);
 
     return file;
   }
