@@ -1,13 +1,7 @@
+import 'package:rdcli/src/exceptions/rdcli_exception.dart';
+
 /// Exception thrown when unable to fetch torrent info.
-class TorrentInfoException implements Exception {
+class TorrentInfoException extends RdcliException {
   /// Creates a new [TorrentInfoException] with a [message].
-  TorrentInfoException(this.message);
-
-  /// The message.
-  final String message;
-
-  @override
-  String toString() {
-    return 'TorrentInfoException: $message';
-  }
+  const TorrentInfoException(super.message);
 }

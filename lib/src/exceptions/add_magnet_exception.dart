@@ -1,14 +1,8 @@
+import 'package:rdcli/src/exceptions/rdcli_exception.dart';
+
 /// Exception thrown when adding a magnet fails. This may
 /// imply a bad magnet URL.
-class AddMagnetException implements Exception {
+class AddMagnetException extends RdcliException {
   /// Creates a new [AddMagnetException] with a [message].
-  AddMagnetException(this.message);
-
-  /// The message.
-  final String message;
-
-  @override
-  String toString() {
-    return 'AddMagnetException: $message';
-  }
+  const AddMagnetException(super.message);
 }
