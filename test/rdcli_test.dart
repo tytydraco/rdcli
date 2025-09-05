@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:rdcli/rdcli.dart';
+import 'package:rdcli/src/exceptions/add_magnet_exception.dart';
 import 'package:test/test.dart';
 
 /// Test magnet of an Arch Linux ISO.
@@ -53,6 +54,29 @@ void main() {
         final digest = await sha256.bind(inputStream).first;
 
         expect(digest.toString(), _testMagnetSha256);
+      });
+    },
+    timeout: const Timeout(Duration(minutes: 5)),
+    skip: true,
+  );
+
+  group(
+    'Rdcli error behavior',
+    () {
+      test('Bad magnet link', () async {
+        final rdcli = Rdcli(magnet: '12345', apiKey: _apiKey);
+        expect(
+          () => rdcli.download(testDir!),
+          throwsA(isA<AddMagnetException>()),
+        );
+      });
+
+      test('Bad API key', () async {
+        final rdcli = Rdcli(magnet: _testMagnet, apiKey: '12345');
+        expect(
+          () => rdcli.download(testDir!),
+          throwsA(isA<AddMagnetException>()),
+        );
       });
     },
     timeout: const Timeout(Duration(minutes: 5)),
