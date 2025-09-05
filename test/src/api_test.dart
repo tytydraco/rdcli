@@ -44,13 +44,13 @@ void main() {
     () {
       test('Valid id', () async {
         expect(
-          () => api.selectFilesToDownload(workingId!),
+          () => api.startDownload(workingId!),
           returnsNormally,
         );
       });
       test('Invalid id', () async {
         expect(
-          () => api.selectFilesToDownload('12345'),
+          () => api.startDownload('12345'),
           throwsA(isA<SelectFilesException>()),
         );
       });
@@ -61,12 +61,12 @@ void main() {
     'Get torrent link from id',
     () {
       test('Valid id', () async {
-        workingLink = await api.getTorrentLinkFromId(workingId!);
+        workingLink = await api.getPrivateLink(workingId!);
         expect(workingLink!.isNotEmpty, true);
       });
       test('Invalid id', () async {
         expect(
-          () => api.getTorrentLinkFromId('12345'),
+          () => api.getPrivateLink('12345'),
           throwsA(isA<TorrentInfoException>()),
         );
       });
@@ -78,13 +78,13 @@ void main() {
     () {
       test('Valid id', () async {
         expect(
-          () => api.getIsDownloadedFromId(workingId!),
+          () => api.isDownloaded(workingId!),
           returnsNormally,
         );
       });
       test('Invalid id', () async {
         expect(
-          () => api.getIsDownloadedFromId('12345'),
+          () => api.isDownloaded('12345'),
           throwsA(isA<TorrentInfoException>()),
         );
       });
@@ -95,12 +95,12 @@ void main() {
     'Unrestrict link',
     () {
       test('Valid link', () async {
-        final publicLink = await api.unrestrictLink(workingLink!);
+        final publicLink = await api.getPublicLink(workingLink!);
         expect(publicLink.isNotEmpty, true);
       });
       test('Invalid link', () async {
         expect(
-          () => api.unrestrictLink('12345'),
+          () => api.getPublicLink('12345'),
           throwsA(isA<UnrestrictLinkException>()),
         );
       });

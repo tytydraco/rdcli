@@ -20,14 +20,15 @@ class Api {
   /// HTTP headers with RealDebrid authentication.
   late final _authHeaders = {'Authorization': 'Bearer $apiKey'};
 
-  /// Add the magnet to the download queue.
+  /// Add the magnet to the download queue. This does not automatically start
+  /// the download; see [startDownload].
+  ///
+  /// Returns the id of the torrent.
   Future<String> addMagnet(String link) async {
     final response = await http.post(
       Uri.parse(apiEndpointAddMagnet),
       headers: _authHeaders,
-      body: {
-        'magnet': link,
-      },
+      body: {'magnet': link},
     );
 
     if (response.statusCode != 201) {
@@ -40,16 +41,12 @@ class Api {
     return j['id'] as String;
   }
 
-  /// Select which torrent to download files from.
-  Future<void> selectFilesToDownload(String id) async {
+  /// Begin downloading the torrent for an uploaded magnet.
+  Future<void> startDownload(String id) async {
     final response = await http.post(
-      Uri.parse(
-        '$apiEndpointSelectFiles/$id',
-      ),
+      Uri.parse('$apiEndpointSelectFiles/$id'),
       headers: _authHeaders,
-      body: {
-        'files': 'all',
-      },
+      body: {'files': 'all'},
     );
 
     if (response.statusCode != 204) {
@@ -59,8 +56,8 @@ class Api {
     }
   }
 
-  /// Find the torrent link from the torrent id.
-  Future<String> getTorrentLinkFromId(String id) async {
+  /// Returns the private link to an uploaded torrent by [addMagnet].
+  Future<String> getPrivateLink(String id) async {
     final response = await http.get(
       Uri.parse('$apiEndpointTorrentInfo/$id'),
       headers: _authHeaders,
@@ -78,7 +75,7 @@ class Api {
   }
 
   /// Find the torrent link from the torrent id.
-  Future<bool> getIsDownloadedFromId(String id) async {
+  Future<bool> isDownloaded(String id) async {
     final response = await http.get(
       Uri.parse('$apiEndpointTorrentInfo/$id'),
       headers: _authHeaders,
@@ -95,14 +92,12 @@ class Api {
     return status == 'downloaded';
   }
 
-  /// Unrestricts a link to a torrent.
-  Future<String> unrestrictLink(String link) async {
+  /// Unrestricts a torrent's private link and returns the public link.
+  Future<String> getPublicLink(String link) async {
     final response = await http.post(
       Uri.parse(apiEndpointUnrestrictLink),
       headers: _authHeaders,
-      body: {
-        'link': link,
-      },
+      body: {'link': link},
     );
 
     if (response.statusCode != 200) {

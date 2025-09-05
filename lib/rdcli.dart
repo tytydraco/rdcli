@@ -36,18 +36,18 @@ class Rdcli {
     final id = await api.addMagnet(magnet);
 
     // 2. Select files.
-    await api.selectFilesToDownload(id);
+    await api.startDownload(id);
 
     // 2.5. Wait for download to finish.
-    while (!(await api.getIsDownloadedFromId(id))) {
+    while (!(await api.isDownloaded(id))) {
       sleep(const Duration(seconds: 1));
     }
 
     // 3. Get info.
-    final link = await api.getTorrentLinkFromId(id);
+    final link = await api.getPrivateLink(id);
 
     // 4. Unrestrict link.
-    final downloadLink = await api.unrestrictLink(link);
+    final downloadLink = await api.getPublicLink(link);
 
     // 5. Save tp disk.
     final file = await _saveToDisk(downloadLink, out);
