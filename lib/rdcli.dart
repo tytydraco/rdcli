@@ -4,6 +4,14 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:rdcli/src/api.dart';
 
+export 'src/api.dart';
+export 'src/endpoints.dart';
+export 'src/exceptions/add_magnet_exception.dart';
+export 'src/exceptions/rdcli_exception.dart';
+export 'src/exceptions/select_files_exception.dart';
+export 'src/exceptions/torrent_info_exception.dart';
+export 'src/exceptions/unrestrict_link_exception.dart';
+
 /// Downloads a magnet using Real Debrid.
 class Rdcli {
   /// Creates a new [Rdcli] given a [magnet] link and [apiKey].
