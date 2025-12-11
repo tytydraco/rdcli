@@ -18,6 +18,7 @@ class Rdcli {
   Rdcli({
     required this.apiKey,
     required this.magnet,
+    this.quiet = false,
   });
 
   /// The API key.
@@ -26,14 +27,42 @@ class Rdcli {
   /// The magnet link.
   final String magnet;
 
+  /// Whether to silence logging output.
+  final bool quiet;
+
   /// The [Api] instance.
   late final api = Api(apiKey: apiKey);
 
   Future<File> _saveToDisk(String url, Directory out) async {
-    final response = await http.get(Uri.parse(url));
+    final request = http.Request('GET', Uri.parse(url));
+    final response = await request.send();
+
     final filename = basename(url);
     final file = File(join(out.path, filename));
-    await file.writeAsBytes(response.bodyBytes);
+    final sink = file.openWrite();
+
+    final total = response.contentLength ?? 0;
+    var received = 0;
+
+    try {
+      await for (final chunk in response.stream) {
+        sink.add(chunk);
+        received += chunk.length;
+
+        // Print progress if verbose.
+        if (!quiet) {
+          final progress = (received / total * 100).toStringAsFixed(2);
+          stdout.write(
+            '\x1B[2K\rProgress: $progress% ($received/$total)',
+          );
+        }
+      }
+    } finally {
+      await sink.close();
+
+      // Print newline if verbose to clear progress line.
+      if (!quiet) stdout.writeln();
+    }
 
     return file;
   }

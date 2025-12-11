@@ -33,6 +33,11 @@ Future<void> main(List<String> arguments) async {
       abbr: 'o',
       help: 'Output directory.',
       defaultsTo: '.',
+    )
+    ..addFlag(
+      'quiet',
+      abbr: 'q',
+      help: 'Silence logging output.',
     );
 
   final results = parser.parse(arguments);
@@ -49,6 +54,7 @@ Future<void> main(List<String> arguments) async {
   final apiKey = results['api-key'] as String;
   final outputDirectoryStr = results['output-directory'] as String;
   final mode = results['mode'] as String;
+  final quiet = results['quiet'] as bool;
 
   final outputDirectory = Directory(outputDirectoryStr);
   if (!outputDirectory.existsSync()) {
@@ -57,17 +63,21 @@ Future<void> main(List<String> arguments) async {
   }
 
   for (final magnetLink in magnetLinks) {
-    final rdcli = Rdcli(apiKey: apiKey, magnet: magnetLink);
+    final rdcli = Rdcli(
+      apiKey: apiKey,
+      magnet: magnetLink,
+      quiet: quiet,
+    );
 
     try {
       if (mode == 'file') {
         final file = await rdcli.download(outputDirectory);
 
-        stdout.writeln(basename(file.path));
+        if (!quiet) stdout.writeln(basename(file.path));
       } else {
         final link = await rdcli.downloadLink();
 
-        stdout.writeln(link);
+        if (!quiet) stdout.writeln(link);
       }
     } on RdcliException catch (e) {
       stderr.writeln(e.toString());
