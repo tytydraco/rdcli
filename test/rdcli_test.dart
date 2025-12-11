@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:rdcli/rdcli.dart';
-import 'package:rdcli/src/exceptions/add_magnet_exception.dart';
 import 'package:test/test.dart';
 
 import 'config.dart';

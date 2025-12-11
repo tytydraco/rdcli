@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:path/path.dart';
 import 'package:rdcli/rdcli.dart';
-import 'package:rdcli/src/exceptions/rdcli_exception.dart';
 
 Future<void> main(List<String> arguments) async {
   final parser = ArgParser();
